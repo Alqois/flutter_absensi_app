@@ -1,6 +1,19 @@
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_absensi_app/data/datasources/attendance_remote_datasource.dart';
 import 'package:flutter_absensi_app/data/datasources/auth_remote_datasource.dart';
+import 'package:flutter_absensi_app/data/datasources/firebase_messanging_remote_datasource.dart';
+import 'package:flutter_absensi_app/data/datasources/permission_remote_datasource.dart';
+import 'package:flutter_absensi_app/firebase_options.dart';
 import 'package:flutter_absensi_app/presentation/auth/bloc/logout/logout_bloc.dart';
+import 'package:flutter_absensi_app/presentation/home/bloc/add_permission/add_permission_bloc.dart';
+import 'package:flutter_absensi_app/presentation/home/bloc/checkin_attendance/checkin_attendance_bloc.dart';
+import 'package:flutter_absensi_app/presentation/home/bloc/checkout_attendance/checkout_attendance_bloc.dart';
+import 'package:flutter_absensi_app/presentation/home/bloc/get_attendance_by_date/get_attendance_by_date_bloc.dart';
+import 'package:flutter_absensi_app/presentation/home/bloc/get_company/get_company_bloc.dart';
+import 'package:flutter_absensi_app/presentation/home/bloc/is_checkedin/is_checkedin_bloc.dart';
+import 'package:flutter_absensi_app/presentation/home/bloc/update_user_register_face/update_user_register_face_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'core/core.dart';
@@ -8,7 +21,12 @@ import 'presentation/auth/bloc/login/login_bloc.dart';
 import 'presentation/auth/pages/splash_page.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-void main() {
+void main()  async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  await FirebaseMessagingRemoteDatasource().initialize();
   runApp(const MyApp());
 }
 
@@ -22,6 +40,13 @@ class MyApp extends StatelessWidget {
       providers: [
         BlocProvider(create: (context) => LoginBloc(AuthRemoteDataSource())),
         BlocProvider(create: (context) => LogoutBloc(AuthRemoteDataSource())),
+        BlocProvider(create: (context) => UpdateUserRegisterFaceBloc(AuthRemoteDataSource())),
+        BlocProvider(create: (context) => GetCompanyBloc(AttendanceRemoteDatasource())),
+        BlocProvider(create: (context) => IsCheckedinBloc(AttendanceRemoteDatasource())),
+        BlocProvider(create: (context) => CheckinAttendanceBloc(AttendanceRemoteDatasource())),
+        BlocProvider(create: (context) => CheckoutAttendanceBloc(AttendanceRemoteDatasource())),
+        BlocProvider(create: (context) => AddPermissionBloc(PermissionRemoteDatasource())),
+        BlocProvider(create: (context) => GetAttendanceByDateBloc(AttendanceRemoteDatasource())),
       ],
       child: MaterialApp(
         title: 'Flutter Demo',

@@ -24,8 +24,17 @@ class $AssetsIconsGen {
   /// File path: assets/icons/back.svg
   SvgGenImage get back => const SvgGenImage('assets/icons/back.svg');
 
+  /// File path: assets/icons/calendar.svg
+  SvgGenImage get calendar => const SvgGenImage('assets/icons/calendar.svg');
+
   /// File path: assets/icons/email.svg
   SvgGenImage get email => const SvgGenImage('assets/icons/email.svg');
+
+  /// File path: assets/icons/image.svg
+  SvgGenImage get image => const SvgGenImage('assets/icons/image.svg');
+
+  /// File path: assets/icons/location.svg
+  SvgGenImage get location => const SvgGenImage('assets/icons/location.svg');
 
   /// Directory path: assets/icons/menu
   $AssetsIconsMenuGen get menu => const $AssetsIconsMenuGen();
@@ -47,7 +56,10 @@ class $AssetsIconsGen {
   List<SvgGenImage> get values => [
     attendance,
     back,
+    calendar,
     email,
+    image,
+    location,
     notificationRounded,
     password,
     reverse,
@@ -139,6 +151,9 @@ class $AssetsIconsNavGen {
   /// File path: assets/icons/nav/home.svg
   SvgGenImage get home => const SvgGenImage('assets/icons/nav/home.svg');
 
+  /// File path: assets/icons/nav/image.svg
+  SvgGenImage get image => const SvgGenImage('assets/icons/nav/image.svg');
+
   /// File path: assets/icons/nav/profile.svg
   SvgGenImage get profile => const SvgGenImage('assets/icons/nav/profile.svg');
 
@@ -146,7 +161,7 @@ class $AssetsIconsNavGen {
   SvgGenImage get setting => const SvgGenImage('assets/icons/nav/setting.svg');
 
   /// List of all assets
-  List<SvgGenImage> get values => [history, home, profile, setting];
+  List<SvgGenImage> get values => [history, home, image, profile, setting];
 }
 
 class Assets {
@@ -154,6 +169,10 @@ class Assets {
 
   static const $AssetsIconsGen icons = $AssetsIconsGen();
   static const $AssetsImagesGen images = $AssetsImagesGen();
+  static const String mobileFaceNet = 'assets/mobile_face_net.tflite';
+
+  /// List of all assets
+  static List<String> get values => [mobileFaceNet];
 }
 
 class AssetGenImage {

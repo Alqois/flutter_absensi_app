@@ -94,7 +94,7 @@ class _LoginPageState extends State<LoginPage> {
                 listener: (context, state) {
                   state.maybeWhen(
                     success: (data) {
-                      AuthLocalDataSource().saveAuthData(data);
+                      AuthLocalDataSource().saveAuthData(data.toJson());
                       context.pushReplacement(const MainPage());
                     },
                     error: (message) {

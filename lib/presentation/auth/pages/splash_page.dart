@@ -13,57 +13,42 @@ class SplashPage extends StatefulWidget {
 }
 
 class _SplashPageState extends State<SplashPage> {
+
+  @override
+  void initState() {
+    super.initState();
+    _startApp();
+  }
+
+  Future<void> _startApp() async {
+    await Future.delayed(const Duration(seconds: 2));
+
+    final isAuth = await AuthLocalDataSource().isAuth();
+
+    if (!mounted) return;
+
+    if (isAuth) {
+      context.pushReplacement(const MainPage());
+    } else {
+      context.pushReplacement(const LoginPage());
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    Future.delayed(
-      const Duration(seconds: 2),
-      () => context.pushReplacement(const LoginPage()),
-    );
     return Scaffold(
       backgroundColor: AppColors.primary,
-      body: FutureBuilder(
-        future: AuthLocalDataSource().isAuth(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Column(
-              children: [
-                const Spacer(),
-                Padding(
-                  padding: const EdgeInsets.all(50.0),
-                  child: Assets.images.logoWhite.image(),
-                ),
-              const Spacer(),
-                Assets.images.logoCodeWithBahri.image(height: 70),
-                const SpaceHeight(20.0),
-              ],
-            );
-          }
-          if (snapshot.hasData) {
-            if (snapshot.data == true) {
-              Future.delayed(
-                const Duration(seconds: 2),
-                () => context.pushReplacement(const MainPage()),
-              );
-            } else {
-              Future.delayed(
-                const Duration(seconds: 2),
-                () => context.pushReplacement(const LoginPage()),
-              );
-            }
-          }
-          return Column(
-            children: [
-              const Spacer(),
-              Padding(
-                padding: const EdgeInsets.all(50.0),
-                child: Assets.images.logoWhite.image(),
-              ),
-              const Spacer(),
-              Assets.images.logoCodeWithBahri.image(height: 70),
-              const SpaceHeight(20.0),
-            ],
-          );
-        },
+      body: Column(
+        children: [
+          const Spacer(),
+          Padding(
+            padding: const EdgeInsets.all(50.0),
+            child: Assets.images.logoWhite.image(),
+          ),
+          const Spacer(),
+          Assets.images.logoCodeWithBahri.image(height: 70),
+          const SpaceHeight(20.0),
+        ],
       ),
     );
   }
