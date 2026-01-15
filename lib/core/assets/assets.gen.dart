@@ -57,6 +57,10 @@ class $AssetsIconsGen {
   /// Directory path: assets/icons/nav
   $AssetsIconsNavGen get nav => const $AssetsIconsNavGen();
 
+  /// File path: assets/icons/notification_prisma.svg
+  SvgGenImage get notificationPrisma =>
+      const SvgGenImage('assets/icons/notification_prisma.svg');
+
   /// File path: assets/icons/notification_rounded.svg
   SvgGenImage get notificationRounded =>
       const SvgGenImage('assets/icons/notification_rounded.svg');
@@ -75,6 +79,7 @@ class $AssetsIconsGen {
     email,
     image,
     location,
+    notificationPrisma,
     notificationRounded,
     password,
     reverse,
@@ -134,8 +139,16 @@ class $AssetsIconsMenuGen {
   /// File path: assets/icons/menu/datang.svg
   SvgGenImage get datang => const SvgGenImage('assets/icons/menu/datang.svg');
 
+  /// File path: assets/icons/menu/datang_prisma.svg
+  SvgGenImage get datangPrisma =>
+      const SvgGenImage('assets/icons/menu/datang_prisma.svg');
+
   /// File path: assets/icons/menu/izin.svg
   SvgGenImage get izin => const SvgGenImage('assets/icons/menu/izin.svg');
+
+  /// File path: assets/icons/menu/izin_prisma.svg
+  SvgGenImage get izinPrisma =>
+      const SvgGenImage('assets/icons/menu/izin_prisma.svg');
 
   /// File path: assets/icons/menu/jadwal.svg
   SvgGenImage get jadwal => const SvgGenImage('assets/icons/menu/jadwal.svg');
@@ -146,14 +159,21 @@ class $AssetsIconsMenuGen {
   /// File path: assets/icons/menu/pulang.svg
   SvgGenImage get pulang => const SvgGenImage('assets/icons/menu/pulang.svg');
 
+  /// File path: assets/icons/menu/pulang_prisma.svg
+  SvgGenImage get pulangPrisma =>
+      const SvgGenImage('assets/icons/menu/pulang_prisma.svg');
+
   /// List of all assets
   List<SvgGenImage> get values => [
     catatan,
     datang,
+    datangPrisma,
     izin,
+    izinPrisma,
     jadwal,
     lembur,
     pulang,
+    pulangPrisma,
   ];
 }
 
@@ -163,8 +183,16 @@ class $AssetsIconsNavGen {
   /// File path: assets/icons/nav/history.svg
   SvgGenImage get history => const SvgGenImage('assets/icons/nav/history.svg');
 
+  /// File path: assets/icons/nav/history_prisma.svg
+  SvgGenImage get historyPrisma =>
+      const SvgGenImage('assets/icons/nav/history_prisma.svg');
+
   /// File path: assets/icons/nav/home.svg
   SvgGenImage get home => const SvgGenImage('assets/icons/nav/home.svg');
+
+  /// File path: assets/icons/nav/home_prisma.svg
+  SvgGenImage get homePrisma =>
+      const SvgGenImage('assets/icons/nav/home_prisma.svg');
 
   /// File path: assets/icons/nav/image.svg
   SvgGenImage get image => const SvgGenImage('assets/icons/nav/image.svg');
@@ -176,7 +204,15 @@ class $AssetsIconsNavGen {
   SvgGenImage get setting => const SvgGenImage('assets/icons/nav/setting.svg');
 
   /// List of all assets
-  List<SvgGenImage> get values => [history, home, image, profile, setting];
+  List<SvgGenImage> get values => [
+    history,
+    historyPrisma,
+    home,
+    homePrisma,
+    image,
+    profile,
+    setting,
+  ];
 }
 
 class Assets {

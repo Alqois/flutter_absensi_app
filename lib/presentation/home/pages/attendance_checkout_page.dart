@@ -95,6 +95,10 @@ class _AttendanceCheckoutPageState extends State<AttendanceCheckoutPage> {
       debugPrint("Dispose camera error: $e");
     }
   }
+  
+  Future<void> safeStopCamera() async {
+    await _stopAndDisposeCamera();
+  }
 
   Future<void> _initializeCamera() async {
     try {
@@ -386,15 +390,23 @@ class _AttendanceCheckoutPageState extends State<AttendanceCheckoutPage> {
   void _takeAbsen() {
     if (!isFaceRegistered) return;
 
+    if (latitude == null || longitude == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Lokasi belum terbaca")),
+      );
+      return;
+    }
+
     cameraStopped = true;
 
     context.read<CheckoutAttendanceBloc>().add(
           CheckoutAttendanceEvent.checkoutAttendance(
-            latitude?.toString() ?? "",
-            longitude?.toString() ?? "",
+            latitude.toString(),
+            longitude.toString(),
           ),
         );
   }
+
 
   // ===================================================================
   // UI
@@ -479,7 +491,7 @@ class _AttendanceCheckoutPageState extends State<AttendanceCheckoutPage> {
                             CheckoutAttendanceState>(
                           listener: (context, state) {
                             state.maybeWhen(
-                              loaded: (_) {
+                              loaded: (_) async {
                                 Navigator.of(context).pushReplacement(
                                   MaterialPageRoute(
                                     builder: (_) =>

@@ -33,33 +33,46 @@ class AttendanceRemoteDatasource {
   }
 
   Future<Either<String, AbsentStatus>> IsCheckedin() async {
-    final authData = await AuthLocalDataSource().getAuthData();
-    final url = Uri.parse('${Variables.baseUrl}/api/is-checkin');
-    final response = await http.get(
-      url,
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ${authData?.token}',
-      },
-    );
-
-    if (response.statusCode == 200) {
-      final r = jsonDecode(response.body);
-
-      return Right(
-        AbsentStatus(
-          IsCheckedin: r["checkedin"] as bool,
-          IsCheckedout: r["checkedout"] as bool,
-        ),
+    try {
+      final authData = await AuthLocalDataSource().getAuthData();
+      final url = Uri.parse('${Variables.baseUrl}/api/is-checkin');
+  
+      final response = await http.get(
+        url,
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ${authData?.token}',
+        },
       );
-    } else {
-      return const Left('Failed to check attendance status');
+  
+      if (response.statusCode == 200) {
+        final r = jsonDecode(response.body);
+        final attendance = r["attendance"]; // bisa null
+  
+        return Right(
+          AbsentStatus(
+            IsCheckedin: r["checkedin"] as bool,
+            IsCheckedout: r["checkedout"] as bool,
+            companyTimeIn: r["time_in"] as String?,
+            companyTimeOut: r["time_out"] as String?,
+            attendanceTimeIn: attendance?["time_in"] as String?,
+            attendanceTimeOut: attendance?["time_out"] as String?,
+          ),
+        );
+      }
+  
+      // ✅ wajib ada return untuk kasus selain 200
+      final body = jsonDecode(response.body);
+      final message = body['message'] ?? 'Failed to check attendance status';
+      return Left(message);
+    } catch (e) {
+      return Left('Exception: $e');
     }
   }
 
   Future<Either<String, CheckInOutResponseModel>> checkin(
-    CheckInOutRequestModel data,
+  CheckInOutRequestModel data,
   ) async {
     try {
       final authData = await AuthLocalDataSource().getAuthData();
@@ -88,26 +101,34 @@ class AttendanceRemoteDatasource {
   }
 
   Future<Either<String, CheckInOutResponseModel>> checkout(
-      CheckInOutRequestModel data) async {
-    final authData = await AuthLocalDataSource().getAuthData();
-    final url = Uri.parse('${Variables.baseUrl}/api/checkout');
-
-    final response = await http.post(
-      url,
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ${authData?.token}',
-      },
-      body: data.toJson(),
-    );
-
-    if (response.statusCode == 200) {
-      return Right(CheckInOutResponseModel.fromJson(response.body));
-    } else {
-      return const Left('Failed to checkout');
+  CheckInOutRequestModel data,
+  ) async {
+    try {
+      final authData = await AuthLocalDataSource().getAuthData();
+      final url = Uri.parse('${Variables.baseUrl}/api/checkout');
+  
+      final response = await http.post(
+        url,
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ${authData?.token}',
+        },
+        body: data.toJson(),
+      );
+  
+      if (response.statusCode == 200) {
+        return Right(CheckInOutResponseModel.fromJson(response.body));
+      } else {
+        final body = jsonDecode(response.body);
+        final message = body['message'] ?? 'Failed to checkout';
+        return Left(message);
+      }
+    } catch (e) {
+      return Left('Exception: $e');
     }
   }
+
 
   Future<Either<String, AttendanceResponseModel>> getAttendance(
       String date) async {
