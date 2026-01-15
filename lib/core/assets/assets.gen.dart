@@ -14,6 +14,21 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_svg/flutter_svg.dart' as _svg;
 import 'package:vector_graphics/vector_graphics.dart' as _vg;
 
+class $AssetsBrandingGen {
+  const $AssetsBrandingGen();
+
+  /// File path: assets/branding/prisma_icon.png
+  AssetGenImage get prismaIcon =>
+      const AssetGenImage('assets/branding/prisma_icon.png');
+
+  /// File path: assets/branding/prisma_icon_fg.png
+  AssetGenImage get prismaIconFg =>
+      const AssetGenImage('assets/branding/prisma_icon_fg.png');
+
+  /// List of all assets
+  List<AssetGenImage> get values => [prismaIcon, prismaIconFg];
+}
+
 class $AssetsIconsGen {
   const $AssetsIconsGen();
 
@@ -167,6 +182,7 @@ class $AssetsIconsNavGen {
 class Assets {
   const Assets._();
 
+  static const $AssetsBrandingGen branding = $AssetsBrandingGen();
   static const $AssetsIconsGen icons = $AssetsIconsGen();
   static const $AssetsImagesGen images = $AssetsImagesGen();
   static const String mobileFaceNet = 'assets/mobile_face_net.tflite';

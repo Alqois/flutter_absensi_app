@@ -1,48 +1,51 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
-  /// primary = #567DF4
-  static const Color primary = Color(0xff567DF4);
+  /// Primary (Prisma Navy)
+  static const Color primary = Color(0xFF0D2A57);
 
-  /// primary = #99ACE9
-  static const Color secondary = Color(0xff99ACE9);
+  /// Secondary (Navy Soft)
+  static const Color secondary = Color(0xFF1E3A6D);
 
-  /// grey = #A4A4A4
-  static const Color grey = Color(0xffA4A4A4);
+  /// Accent (Blue Soft)
+  static const Color accent = Color(0xFF4F6EDB);
 
-  /// light = #D0D0D0
-  static const Color light = Color(0xffD0D0D0);
+  /// Grey
+  static const Color grey = Color(0xFFA4A4A4);
 
-  /// light = #F5F5F5
-  static const Color lightSheet = Color(0xffF5F5F5);
+  /// Light Grey
+  static const Color light = Color(0xFFD0D0D0);
 
-  /// blueLight = #C7D0EB
-  static const Color blueLight = Color(0xffC7D0EB);
+  /// Light Background
+  static const Color lightSheet = Color(0xFFF5F5F5);
 
-  /// black = #000000
-  static const Color black = Color(0xff000000);
+  /// Blue Light (Background / Card)
+  static const Color blueLight = Color(0xFFE8EEFF);
 
-  /// white = #FFFFFF
-  static const Color white = Color(0xffFFFFFF);
+  /// Black
+  static const Color black = Color(0xFF000000);
 
-  /// green = #50C474
-  static const Color green = Color(0xff50C474);
+  /// White
+  static const Color white = Color(0xFFFFFFFF);
 
-  /// red = #F65151
-  static const Color red = Color(0xffF65151);
+  /// Success
+  static const Color green = Color(0xFF50C474);
 
-  /// card = #E5E5E5
-  static const Color card = Color(0xffE5E5E5);
+  /// Error
+  static const Color red = Color(0xFFF65151);
 
-  /// card = #EFF0F6
-  static const Color title = Color(0xffEFF0F6);
+  /// Card Background
+  static const Color card = Color(0xFFF2F4F8);
 
-  /// disabled = #C8D1E1
-  static const Color disabled = Color(0xffC8D1E1);
+  /// Title
+  static const Color title = Color(0xFF1C1C1C);
 
-  /// subtitle = #7890CD
-  static const Color subtitle = Color(0xff7890CD);
+  /// Disabled
+  static const Color disabled = Color(0xFFC8D1E1);
 
-  /// stroke = #DBDBDB
-  static const Color stroke = Color(0xffDBDBDB);
+  /// Subtitle
+  static const Color subtitle = Color(0xFF6B7A99);
+
+  /// Stroke / Divider
+  static const Color stroke = Color(0xFFE0E0E0);
 }
