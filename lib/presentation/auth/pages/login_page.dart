@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_absensi_app/presentation/home/pages/forgot_password_page.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -201,7 +202,14 @@ class _LoginPageState extends State<LoginPage> {
                                 Align(
                                   alignment: Alignment.centerRight,
                                   child: TextButton(
-                                    onPressed: isLoading ? null : () {},
+                                    onPressed: isLoading
+                                      ? null
+                                      : () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(builder: (_) => const ForgotPasswordPage()),
+                                          );
+                                        },
                                     child: Text(
                                       'Lupa password?',
                                       style: GoogleFonts.poppins(

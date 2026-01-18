@@ -8,6 +8,7 @@ import 'package:flutter_absensi_app/presentation/home/bloc/checkout_attendance/c
 import 'package:flutter_absensi_app/presentation/home/pages/attendance_success_page.dart';
 import 'package:flutter_absensi_app/presentation/home/pages/location_page.dart';
 import 'package:flutter_absensi_app/presentation/home/widget/face_detector_painter.dart';
+import 'package:flutter_absensi_app/data/datasources/attendance_remote_datasource.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import 'package:image/image.dart' as img;
@@ -387,25 +388,36 @@ class _AttendanceCheckoutPageState extends State<AttendanceCheckoutPage> {
   // TAKE ABSEN
   // ===================================================================
 
-  void _takeAbsen() {
-    if (!isFaceRegistered) return;
+  Future<void> _takeAbsen() async {
+  if (!isFaceRegistered) return;
 
-    if (latitude == null || longitude == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Lokasi belum terbaca")),
-      );
-      return;
-    }
-
-    cameraStopped = true;
-
-    context.read<CheckoutAttendanceBloc>().add(
-          CheckoutAttendanceEvent.checkoutAttendance(
-            latitude.toString(),
-            longitude.toString(),
-          ),
-        );
+  if (latitude == null || longitude == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Lokasi belum terbaca")),
+    );
+    return;
   }
+
+  cameraStopped = true;
+
+  // ✅ cek ke server: sudah check-in atau belum
+  final statusResult = await AttendanceRemoteDatasource().IsCheckedin();
+
+  // kalau gagal cek status, anggap belum check-in biar tetap kecatat
+  final bool checkoutWithoutCheckin = statusResult.fold(
+    (_) => true,
+    (s) => !s.IsCheckedin,
+  );
+
+  context.read<CheckoutAttendanceBloc>().add(
+        CheckoutAttendanceEvent.checkoutAttendance(
+          latitude.toString(),
+          longitude.toString(),
+          checkoutWithoutCheckin, // ✅ parameter ke-3
+        ),
+      );
+}
+
 
 
   // ===================================================================
@@ -514,8 +526,7 @@ class _AttendanceCheckoutPageState extends State<AttendanceCheckoutPage> {
                               loading: () => const CircularProgressIndicator(),
                               orElse: () {
                                 return IconButton(
-                                  onPressed:
-                                      isFaceRegistered ? _takeAbsen : null,
+                                  onPressed: isFaceRegistered ? () => _takeAbsen() : null,
                                   icon: const Icon(Icons.circle, size: 70),
                                   color: isFaceRegistered
                                       ? Colors.red

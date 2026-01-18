@@ -214,6 +214,31 @@ class _HistoryPageState extends State<HistoryPage> {
                           time: attendance.timeOut ?? '-',
                           date: prettyDate,
                         ),
+
+                        // ✅ PENANDA
+                        if (attendance.checkoutWithoutCheckin == true) ...[
+                          const SizedBox(height: 8),
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: Colors.orange.withOpacity(0.15),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: Colors.orange),
+                              ),
+                              child: const Text(
+                                "⚠ Checkout tanpa absen masuk",
+                                style: TextStyle(
+                                  color: Colors.orange,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+
                         const SizedBox(height: 10),
                         HistoryLocation(
                           isAttendance: false,

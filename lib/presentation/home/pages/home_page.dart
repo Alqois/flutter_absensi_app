@@ -1,5 +1,7 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_absensi_app/core/helper/radius_calculate.dart';
 import 'package:flutter_absensi_app/core/services/fake_location_service.dart';
 import 'package:flutter_absensi_app/data/datasources/auth_local_datasource.dart';
@@ -7,15 +9,19 @@ import 'package:flutter_absensi_app/presentation/home/bloc/get_company/get_compa
 import 'package:flutter_absensi_app/presentation/home/bloc/is_checkedin/is_checkedin_bloc.dart';
 import 'package:flutter_absensi_app/presentation/home/pages/attendance_checkin_page.dart';
 import 'package:flutter_absensi_app/presentation/home/pages/attendance_checkout_page.dart';
+import 'package:flutter_absensi_app/presentation/home/pages/notification_page.dart';
 import 'package:flutter_absensi_app/presentation/home/pages/permission_page.dart';
+import 'package:flutter_absensi_app/presentation/home/pages/profile_page.dart';
 import 'package:flutter_absensi_app/presentation/home/pages/register_face_attendance_page.dart';
 import 'package:flutter_absensi_app/presentation/home/pages/setting_page.dart';
 import 'package:flutter_absensi_app/presentation/home/widget/menu_button.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_svg/svg.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:location/location.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/core.dart';
+import '../../../core/helper/notification_storage.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -26,9 +32,12 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   String? faceEmbedding;
-
   double? latitude;
   double? longitude;
+
+  Timer? _clock;
+
+  static const String _photoKey = 'profile_photo_path';
 
   @override
   void initState() {
@@ -36,11 +45,27 @@ class _HomePageState extends State<HomePage> {
     _initializeFaceEmbedding();
     getCurrentPosition();
     _refreshHome();
+
+    // ✅ jam realtime
+    _clock = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _clock?.cancel();
+    super.dispose();
   }
 
   void _refreshHome() {
     context.read<IsCheckedinBloc>().add(const IsCheckedinEvent.IsCheckedIn());
     context.read<GetCompanyBloc>().add(const GetCompanyEvent.getCompany());
+  }
+
+  Future<String?> _getLocalPhotoPath() async {
+    final pref = await SharedPreferences.getInstance();
+    return pref.getString(_photoKey);
   }
 
   Future<void> getCurrentPosition() async {
@@ -82,7 +107,6 @@ class _HomePageState extends State<HomePage> {
     return t.length >= 5 ? t.substring(0, 5) : t;
   }
 
-  // Face ID button (custom, beda dari tutor)
   Widget _faceIdButton({
     required String label,
     required VoidCallback onPressed,
@@ -151,24 +175,20 @@ class _HomePageState extends State<HomePage> {
         onRefresh: () async {
           _refreshHome();
           await Future.delayed(const Duration(milliseconds: 350));
+          if (mounted) setState(() {});
         },
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           child: Container(
-            // ✅ background gradient prisma
             decoration: const BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [
-                  AppColors.accent,
-                  AppColors.primary,
-                ],
+                colors: [AppColors.accent, AppColors.primary],
               ),
             ),
             child: Stack(
               children: [
-                // ✅ blob / shape biar beda dari tutor
                 Positioned(
                   top: -120,
                   right: -140,
@@ -193,8 +213,6 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                 ),
-
-                // ✅ konten
                 SafeArea(
                   child: Padding(
                     padding: const EdgeInsets.all(16.0),
@@ -206,19 +224,45 @@ class _HomePageState extends State<HomePage> {
                         // =======================
                         Row(
                           children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(18),
-                              child: Container(
-                                width: 44,
-                                height: 44,
-                                color: AppColors.blueLight.withOpacity(0.30),
-                                child: const Icon(
-                                  Icons.person_rounded,
-                                  color: AppColors.white,
-                                ),
-                              ),
+                            // FOTO PROFILE LOKAL (tap => profile)
+                            FutureBuilder<String?>(
+                              future: _getLocalPhotoPath(),
+                              builder: (context, snapPhoto) {
+                                final path = snapPhoto.data;
+                                final exists =
+                                    path != null && File(path).existsSync();
+
+                                return InkWell(
+                                  borderRadius: BorderRadius.circular(18),
+                                  onTap: () async {
+                                    await context.push(const ProfilePage());
+                                    if (!mounted) return;
+                                    setState(() {});
+                                  },
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(18),
+                                    child: Container(
+                                      width: 44,
+                                      height: 44,
+                                      color:
+                                          AppColors.blueLight.withOpacity(0.30),
+                                      child: exists
+                                          ? Image.file(
+                                              File(path!),
+                                              fit: BoxFit.cover,
+                                            )
+                                          : const Icon(
+                                              Icons.person_rounded,
+                                              color: AppColors.white,
+                                            ),
+                                    ),
+                                  ),
+                                );
+                              },
                             ),
                             const SpaceWidth(12),
+
+                            // NAMA USER
                             Expanded(
                               child: FutureBuilder(
                                 future: AuthLocalDataSource().getAuthData(),
@@ -258,40 +302,58 @@ class _HomePageState extends State<HomePage> {
                                   color: AppColors.white),
                             ),
 
-                            // notif (sementara)
-                            Stack(
-                              clipBehavior: Clip.none,
-                              children: [
-                                IconButton(
-                                  onPressed: () {},
-                                  icon: SvgPicture.asset(
-                                    'assets/icons/notification_prisma.svg',
-                                    width: 22,
-                                    height: 22,
-                                    colorFilter: const ColorFilter.mode(
-                                      AppColors.white,
-                                      BlendMode.srcIn,
+                            // NOTIF + RED DOT (unread)
+                            FutureBuilder<int>(
+                              future: NotificationStorage.unreadCount(),
+                              builder: (context, snap) {
+                                final unread = snap.data ?? 0;
+
+                                return Stack(
+                                  clipBehavior: Clip.none,
+                                  children: [
+                                    IconButton(
+                                      onPressed: () async {
+                                        await context
+                                            .push(const NotificationPage());
+                                        if (!mounted) return;
+                                        setState(() {}); // refresh dot
+                                      },
+                                      icon: SvgPicture.asset(
+                                        'assets/icons/notification_prisma.svg',
+                                        width: 22,
+                                        height: 22,
+                                        colorFilter: const ColorFilter.mode(
+                                          AppColors.white,
+                                          BlendMode.srcIn,
+                                        ),
+                                      ),
                                     ),
-                                  ),
-                                ),
-                                Positioned(
-                                  top: 8,
-                                  right: 10,
-                                  child: Container(
-                                    width: 8,
-                                    height: 8,
-                                    decoration: const BoxDecoration(
-                                      color: AppColors.red,
-                                      shape: BoxShape.circle,
-                                    ),
-                                  ),
-                                ),
-                              ],
+                                    if (unread > 0)
+                                      Positioned(
+                                        top: 8,
+                                        right: 10,
+                                        child: Container(
+                                          width: 8,
+                                          height: 8,
+                                          decoration: const BoxDecoration(
+                                            color: AppColors.red,
+                                            shape: BoxShape.circle,
+                                          ),
+                                        ),
+                                      ),
+                                  ],
+                                );
+                              },
                             ),
 
-                            // settings
+                            // SETTINGS
                             IconButton(
-                              onPressed: () => context.push(const SettingPage()),
+                              onPressed: () async {
+                                await context.push(const SettingPage());
+                                if (!mounted) return;
+                                setState(() {});
+                                _initializeFaceEmbedding();
+                              },
                               icon: SvgPicture.asset(
                                 'assets/icons/setting_prisma.svg',
                                 width: 22,
@@ -338,16 +400,6 @@ class _HomePageState extends State<HomePage> {
                               final isCheckout = state.maybeWhen(
                                 success: (d) => d.IsCheckedout,
                                 orElse: () => false,
-                              );
-
-                              final companyTimeIn = state.maybeWhen(
-                                success: (d) => d.companyTimeIn,
-                                orElse: () => null,
-                              );
-
-                              final companyTimeOut = state.maybeWhen(
-                                success: (d) => d.companyTimeOut,
-                                orElse: () => null,
                               );
 
                               final attendanceTimeIn = state.maybeWhen(
@@ -406,7 +458,6 @@ class _HomePageState extends State<HomePage> {
                                   const SpaceHeight(16),
                                   const Divider(height: 1),
                                   const SpaceHeight(14),
-
                                   const Text(
                                     'Jam Kerja',
                                     style: TextStyle(
@@ -416,41 +467,60 @@ class _HomePageState extends State<HomePage> {
                                   ),
                                   const SpaceHeight(8),
 
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: Text(
-                                          '${_fmtTime(companyTimeIn)} - ${_fmtTime(companyTimeOut)}',
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.w900,
-                                            fontSize: 20.0,
-                                            color: AppColors.title,
+                                  // ✅ Jam kerja dari GetCompanyBloc
+                                  BlocBuilder<GetCompanyBloc, GetCompanyState>(
+                                    builder: (context, cState) {
+                                      final timeIn = cState.maybeWhen(
+                                        success: (c) => c.timeIn,
+                                        orElse: () => null,
+                                      );
+                                      final timeOut = cState.maybeWhen(
+                                        success: (c) => c.timeOut,
+                                        orElse: () => null,
+                                      );
+
+                                      final companyLoading = cState.maybeWhen(
+                                        loading: () => true,
+                                        orElse: () => false,
+                                      );
+
+                                      return Row(
+                                        children: [
+                                          Expanded(
+                                            child: Text(
+                                              '${_fmtTime(timeIn)} - ${_fmtTime(timeOut)}',
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.w900,
+                                                fontSize: 20.0,
+                                                color: AppColors.title,
+                                              ),
+                                            ),
                                           ),
-                                        ),
-                                      ),
-                                      if (isLoading)
-                                        const SizedBox(
-                                          width: 18,
-                                          height: 18,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                          ),
-                                        ),
-                                    ],
+                                          if (companyLoading)
+                                            const SizedBox(
+                                              width: 18,
+                                              height: 18,
+                                              child: CircularProgressIndicator(
+                                                  strokeWidth: 2),
+                                            ),
+                                        ],
+                                      );
+                                    },
                                   ),
 
                                   const SpaceHeight(14),
-
                                   Container(
                                     padding: const EdgeInsets.symmetric(
                                       horizontal: 12,
                                       vertical: 11,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: AppColors.primary.withOpacity(0.06),
+                                      color:
+                                          AppColors.primary.withOpacity(0.06),
                                       borderRadius: BorderRadius.circular(14),
-                                      border:
-                                          Border.all(color: AppColors.blueLight),
+                                      border: Border.all(
+                                        color: AppColors.blueLight,
+                                      ),
                                     ),
                                     child: Row(
                                       children: [
@@ -469,7 +539,6 @@ class _HomePageState extends State<HomePage> {
                                       ],
                                     ),
                                   ),
-
                                   if (isCheckin) ...[
                                     const SpaceHeight(10.0),
                                     Text(
@@ -504,129 +573,180 @@ class _HomePageState extends State<HomePage> {
 
                         BlocBuilder<GetCompanyBloc, GetCompanyState>(
                           builder: (context, companyState) {
-                            final latitudePoint = companyState.maybeWhen(
-                              orElse: () => 0.0,
-                              success: (data) => double.parse(data.latitude!),
-                            );
-                            final longitudePoint = companyState.maybeWhen(
-                              orElse: () => 0.0,
-                              success: (data) => double.parse(data.longitude!),
-                            );
-                            final radiusPoint = companyState.maybeWhen(
-                              orElse: () => 0.0,
-                              success: (data) => double.parse(data.radiusKm!),
-                            );
-
-                            return BlocBuilder<IsCheckedinBloc, IsCheckedinState>(
-                              builder: (context, state) {
-                                final isCheckin = state.maybeWhen(
-                                  success: (data) => data.IsCheckedin,
-                                  orElse: () => false,
-                                );
-                                final isCheckout = state.maybeWhen(
-                                  success: (data) => data.IsCheckedout,
-                                  orElse: () => false,
-                                );
-
-                                return Container(
-                                  padding: const EdgeInsets.all(14),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.white.withOpacity(0.94),
-                                    borderRadius: BorderRadius.circular(22),
-                                  ),
-                                  child: Column(
-                                    children: [
-                                      MenuButton(
-                                        label: 'Datang (Check-in)',
-                                        iconPath:
-                                            'assets/icons/menu/datang_prisma.svg',
-                                        disabled: isCheckin || isCheckout,
-                                        onPressed: () async {
-                                          if (await FakeLocationService
-                                              .isFakeLocation()) {
-                                            _fakeGPSDialog();
-                                            return;
-                                          }
-                                          if (isCheckin) {
-                                            _snack('Anda sudah check-in');
-                                            return;
-                                          }
-                                          if (isCheckout) {
-                                            _snack(
-                                                'Anda sudah checkout hari ini');
-                                            return;
-                                          }
-
-                                          final distanceKM =
-                                              RadiusCalculate.calculateDistance(
-                                            latitude ?? 0.0,
-                                            longitude ?? 0.0,
-                                            latitudePoint,
-                                            longitudePoint,
-                                          );
-
-                                          if (distanceKM > radiusPoint) {
-                                            _snack(
-                                                'Anda di luar jangkauan check-in');
-                                            return;
-                                          }
-
-                                          context.push(
-                                              const AttendanceCheckinPage());
-                                        },
+                            return companyState.maybeWhen(
+                              loading: () => Container(
+                                padding: const EdgeInsets.all(14),
+                                decoration: BoxDecoration(
+                                  color: AppColors.white.withOpacity(0.94),
+                                  borderRadius: BorderRadius.circular(22),
+                                ),
+                                child: const Center(
+                                  child: CircularProgressIndicator(),
+                                ),
+                              ),
+                              error: (msg) => Container(
+                                padding: const EdgeInsets.all(14),
+                                decoration: BoxDecoration(
+                                  color: AppColors.white.withOpacity(0.94),
+                                  borderRadius: BorderRadius.circular(22),
+                                ),
+                                child: Column(
+                                  children: [
+                                    Text(
+                                      "Gagal memuat data kantor\n$msg",
+                                      textAlign: TextAlign.center,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w700,
                                       ),
-                                      const SpaceHeight(12),
-                                      MenuButton(
-                                        label: 'Pulang (Checkout)',
-                                        iconPath:
-                                            'assets/icons/menu/pulang_prisma.svg',
-                                        disabled: !isCheckin || isCheckout,
-                                        onPressed: () async {
-                                          if (await FakeLocationService
-                                              .isFakeLocation()) {
-                                            _fakeGPSDialog();
-                                            return;
-                                          }
-                                          if (!isCheckin) {
-                                            _snack('Anda harus check-in dulu');
-                                            return;
-                                          }
-                                          if (isCheckout) {
-                                            _snack(
-                                                'Anda sudah checkout hari ini');
-                                            return;
-                                          }
+                                    ),
+                                    const SizedBox(height: 12),
+                                    ElevatedButton(
+                                      onPressed: _refreshHome,
+                                      child: const Text("Coba Lagi"),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              success: (data) {
+                                final latitudePoint =
+                                    double.tryParse(data.latitude ?? '') ?? 0.0;
+                                final longitudePoint =
+                                    double.tryParse(data.longitude ?? '') ?? 0.0;
+                                final radiusPoint =
+                                    double.tryParse(data.radiusKm ?? '') ?? 0.0;
 
-                                          final distanceKM =
-                                              RadiusCalculate.calculateDistance(
-                                            latitude ?? 0.0,
-                                            longitude ?? 0.0,
-                                            latitudePoint,
-                                            longitudePoint,
-                                          );
+                                if (latitudePoint == 0 ||
+                                    longitudePoint == 0 ||
+                                    radiusPoint == 0) {
+                                  return Container(
+                                    padding: const EdgeInsets.all(14),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.white.withOpacity(0.94),
+                                      borderRadius: BorderRadius.circular(22),
+                                    ),
+                                    child: Column(
+                                      children: [
+                                        const Text(
+                                          "Data lokasi kantor belum lengkap.\nHubungi admin.",
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w800,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 12),
+                                        ElevatedButton(
+                                          onPressed: _refreshHome,
+                                          child: const Text("Refresh"),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                }
 
-                                          if (distanceKM > radiusPoint) {
-                                            _snack(
-                                                'Anda di luar radius checkout');
-                                            return;
-                                          }
+                                return BlocBuilder<IsCheckedinBloc, IsCheckedinState>(
+                                  builder: (context, state) {
+                                    final isCheckin = state.maybeWhen(
+                                      success: (d) => d.IsCheckedin,
+                                      orElse: () => false,
+                                    );
+                                    final isCheckout = state.maybeWhen(
+                                      success: (d) => d.IsCheckedout,
+                                      orElse: () => false,
+                                    );
 
-                                          context.push(
-                                              const AttendanceCheckoutPage());
-                                        },
+                                    return Container(
+                                      padding: const EdgeInsets.all(14),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.white.withOpacity(0.94),
+                                        borderRadius: BorderRadius.circular(22),
                                       ),
-                                      const SpaceHeight(12),
-                                      MenuButton(
-                                        label: 'Izin / Permission',
-                                        iconPath:
-                                            'assets/icons/menu/izin_prisma.svg',
-                                        onPressed: () => context
-                                            .push(const PermissionPage()),
+                                      child: Column(
+                                        children: [
+                                          MenuButton(
+                                            label: 'Datang (Check-in)',
+                                            iconPath:
+                                                'assets/icons/menu/datang_prisma.svg',
+                                            disabled: isCheckin || isCheckout,
+                                            onPressed: () async {
+                                              if (await FakeLocationService.isFakeLocation()) {
+                                                _fakeGPSDialog();
+                                                return;
+                                              }
+                                              if (isCheckin) {
+                                                _snack('Anda sudah check-in');
+                                                return;
+                                              }
+                                              if (isCheckout) {
+                                                _snack('Anda sudah checkout hari ini');
+                                                return;
+                                              }
+
+                                              final distanceKM = RadiusCalculate.calculateDistance(
+                                                latitude ?? 0.0,
+                                                longitude ?? 0.0,
+                                                latitudePoint,
+                                                longitudePoint,
+                                              );
+
+                                              if (distanceKM > radiusPoint) {
+                                                _snack('Anda di luar jangkauan check-in');
+                                                return;
+                                              }
+
+                                              context.push(const AttendanceCheckinPage());
+                                            },
+                                          ),
+                                          const SpaceHeight(12),
+                                          MenuButton(
+                                            label: 'Pulang (Checkout)',
+                                            iconPath: 'assets/icons/menu/pulang_prisma.svg',
+                                            disabled: isCheckout, // ✅ cuma disable kalau sudah checkout
+                                            onPressed: () async {
+                                              if (await FakeLocationService.isFakeLocation()) {
+                                                _fakeGPSDialog();
+                                                return;
+                                              }
+
+                                              if (isCheckout) {
+                                                _snack('Anda sudah checkout hari ini');
+                                                return;
+                                              }
+
+                                              // optional info (tidak ngeblok)
+                                              if (!isCheckin) {
+                                                _snack('Anda belum check-in, checkout akan tercatat tanpa check-in');
+                                              }
+
+                                              final distanceKM = RadiusCalculate.calculateDistance(
+                                                latitude ?? 0.0,
+                                                longitude ?? 0.0,
+                                                latitudePoint,
+                                                longitudePoint,
+                                              );
+
+                                              if (distanceKM > radiusPoint) {
+                                                _snack('Anda di luar radius checkout');
+                                                return;
+                                              }
+
+                                              context.push(const AttendanceCheckoutPage());
+                                            },
+                                          ),
+                                          const SpaceHeight(12),
+                                          MenuButton(
+                                            label: 'Izin / Permission',
+                                            iconPath:
+                                                'assets/icons/menu/izin_prisma.svg',
+                                            onPressed: () =>
+                                                context.push(const PermissionPage()),
+                                          ),
+                                        ],
                                       ),
-                                    ],
-                                  ),
+                                    );
+                                  },
                                 );
                               },
+                              orElse: () => const SizedBox.shrink(),
                             );
                           },
                         ),
@@ -634,7 +754,7 @@ class _HomePageState extends State<HomePage> {
                         const SpaceHeight(14),
 
                         // =======================
-                        // FACE ID BUTTON (custom)
+                        // FACE ID BUTTON
                         // =======================
                         BlocBuilder<IsCheckedinBloc, IsCheckedinState>(
                           builder: (context, checkState) {
@@ -661,18 +781,21 @@ class _HomePageState extends State<HomePage> {
                             return BlocBuilder<GetCompanyBloc, GetCompanyState>(
                               builder: (context, companyState) {
                                 final latitudePoint = companyState.maybeWhen(
+                                  success: (d) =>
+                                      double.tryParse(d.latitude ?? '') ?? 0.0,
                                   orElse: () => 0.0,
-                                  success: (d) => double.parse(d.latitude!),
                                 );
 
                                 final longitudePoint = companyState.maybeWhen(
+                                  success: (d) =>
+                                      double.tryParse(d.longitude ?? '') ?? 0.0,
                                   orElse: () => 0.0,
-                                  success: (d) => double.parse(d.longitude!),
                                 );
 
                                 final radiusPoint = companyState.maybeWhen(
+                                  success: (d) =>
+                                      double.tryParse(d.radiusKm ?? '') ?? 0.0,
                                   orElse: () => 0.0,
-                                  success: (d) => double.parse(d.radiusKm!),
                                 );
 
                                 return _faceIdButton(
@@ -680,8 +803,7 @@ class _HomePageState extends State<HomePage> {
                                       ? "Checkout Using Face ID"
                                       : "Check-in Using Face ID",
                                   onPressed: () async {
-                                    if (await FakeLocationService
-                                        .isFakeLocation()) {
+                                    if (await FakeLocationService.isFakeLocation()) {
                                       _fakeGPSDialog();
                                       return;
                                     }
@@ -700,14 +822,12 @@ class _HomePageState extends State<HomePage> {
                                     }
 
                                     if (!isCheckin) {
-                                      context.push(
-                                          const AttendanceCheckinPage());
+                                      context.push(const AttendanceCheckinPage());
                                       return;
                                     }
 
                                     if (isCheckin && !isCheckout) {
-                                      context.push(
-                                          const AttendanceCheckoutPage());
+                                      context.push(const AttendanceCheckoutPage());
                                       return;
                                     }
 

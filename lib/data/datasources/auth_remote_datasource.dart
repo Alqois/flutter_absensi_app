@@ -149,4 +149,112 @@ class AuthRemoteDataSource {
     print("📥 UPDATE TOKEN STATUS = ${response.statusCode}");
     print("📥 UPDATE TOKEN RESPONSE = ${response.body}");
   }
+
+  // -------------------------------
+  // FORGOT PASSWORD
+  // -------------------------------
+  Future<Either<String, String>> forgotPassword(String email) async {
+    final url = Uri.parse('${Variables.baseUrl}/api/auth/forgot-password');
+
+    final res = await http.post(
+      url,
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({'email': email}),
+    );
+
+    if (res.statusCode == 200) {
+      final body = jsonDecode(res.body);
+      return Right(body['message']?.toString() ?? 'OTP dikirim.');
+    } else {
+      try {
+        final body = jsonDecode(res.body);
+        return Left(body['message']?.toString() ?? 'Gagal mengirim OTP');
+      } catch (_) {
+        return const Left('Gagal mengirim OTP');
+      }
+    }
+  }
+
+  // -------------------------------
+  // RESET PASSWORD (OTP)
+  // -------------------------------
+  Future<Either<String, String>> resetPassword({
+    required String email,
+    required String otp,
+    required String password,
+    required String passwordConfirmation,
+  }) async {
+    final url = Uri.parse('${Variables.baseUrl}/api/auth/reset-password');
+
+    final res = await http.post(
+      url,
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'email': email,
+        'otp': otp,
+        'password': password,
+        'password_confirmation': passwordConfirmation,
+      }),
+    );
+
+    if (res.statusCode == 200) {
+      final body = jsonDecode(res.body);
+      return Right(body['message']?.toString() ?? 'Password berhasil direset.');
+    } else {
+      try {
+        final body = jsonDecode(res.body);
+        return Left(body['message']?.toString() ?? 'Gagal reset password');
+      } catch (_) {
+        return const Left('Gagal reset password');
+      }
+    }
+  }
+
+  // -------------------------------
+  // CHANGE PASSWORD (NEED LOGIN/TOKEN)
+  // -------------------------------
+  Future<Either<String, String>> changePassword({
+    required String currentPassword,
+    required String newPassword,
+    required String newPasswordConfirmation,
+  }) async {
+    final auth = await AuthLocalDataSource().getAuthData();
+    if (auth == null) return const Left('Auth kosong. Silakan login ulang.');
+
+    final url = Uri.parse('${Variables.baseUrl}/api/auth/change-password');
+
+    final res = await http.post(
+      url,
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ${auth.token}',
+      },
+      body: jsonEncode({
+        'current_password': currentPassword,
+        'password': newPassword,
+        'password_confirmation': newPasswordConfirmation,
+      }),
+    );
+
+    if (res.statusCode == 200) {
+      final body = jsonDecode(res.body);
+      return Right(body['message']?.toString() ?? 'Password berhasil diganti.');
+    } else {
+      try {
+        final body = jsonDecode(res.body);
+        return Left(body['message']?.toString() ?? 'Gagal ganti password');
+      } catch (_) {
+        return const Left('Gagal ganti password');
+      }
+    }
+  }
+
+
 }

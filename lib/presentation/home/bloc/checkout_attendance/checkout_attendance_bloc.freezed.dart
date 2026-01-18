@@ -122,11 +122,11 @@ return checkoutAttendance(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  started,TResult Function( String latitude,  String longitude)?  checkoutAttendance,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  started,TResult Function( String latitude,  String longitude,  bool checkoutWithoutCheckin)?  checkoutAttendance,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Started() when started != null:
 return started();case _Checkout() when checkoutAttendance != null:
-return checkoutAttendance(_that.latitude,_that.longitude);case _:
+return checkoutAttendance(_that.latitude,_that.longitude,_that.checkoutWithoutCheckin);case _:
   return orElse();
 
 }
@@ -144,11 +144,11 @@ return checkoutAttendance(_that.latitude,_that.longitude);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  started,required TResult Function( String latitude,  String longitude)  checkoutAttendance,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  started,required TResult Function( String latitude,  String longitude,  bool checkoutWithoutCheckin)  checkoutAttendance,}) {final _that = this;
 switch (_that) {
 case _Started():
 return started();case _Checkout():
-return checkoutAttendance(_that.latitude,_that.longitude);case _:
+return checkoutAttendance(_that.latitude,_that.longitude,_that.checkoutWithoutCheckin);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -165,11 +165,11 @@ return checkoutAttendance(_that.latitude,_that.longitude);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  started,TResult? Function( String latitude,  String longitude)?  checkoutAttendance,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  started,TResult? Function( String latitude,  String longitude,  bool checkoutWithoutCheckin)?  checkoutAttendance,}) {final _that = this;
 switch (_that) {
 case _Started() when started != null:
 return started();case _Checkout() when checkoutAttendance != null:
-return checkoutAttendance(_that.latitude,_that.longitude);case _:
+return checkoutAttendance(_that.latitude,_that.longitude,_that.checkoutWithoutCheckin);case _:
   return null;
 
 }
@@ -213,11 +213,12 @@ String toString() {
 
 
 class _Checkout implements CheckoutAttendanceEvent {
-  const _Checkout(this.latitude, this.longitude);
+  const _Checkout(this.latitude, this.longitude, this.checkoutWithoutCheckin);
   
 
  final  String latitude;
  final  String longitude;
+ final  bool checkoutWithoutCheckin;
 
 /// Create a copy of CheckoutAttendanceEvent
 /// with the given fields replaced by the non-null parameter values.
@@ -229,16 +230,16 @@ _$CheckoutCopyWith<_Checkout> get copyWith => __$CheckoutCopyWithImpl<_Checkout>
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Checkout&&(identical(other.latitude, latitude) || other.latitude == latitude)&&(identical(other.longitude, longitude) || other.longitude == longitude));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Checkout&&(identical(other.latitude, latitude) || other.latitude == latitude)&&(identical(other.longitude, longitude) || other.longitude == longitude)&&(identical(other.checkoutWithoutCheckin, checkoutWithoutCheckin) || other.checkoutWithoutCheckin == checkoutWithoutCheckin));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,latitude,longitude);
+int get hashCode => Object.hash(runtimeType,latitude,longitude,checkoutWithoutCheckin);
 
 @override
 String toString() {
-  return 'CheckoutAttendanceEvent.checkoutAttendance(latitude: $latitude, longitude: $longitude)';
+  return 'CheckoutAttendanceEvent.checkoutAttendance(latitude: $latitude, longitude: $longitude, checkoutWithoutCheckin: $checkoutWithoutCheckin)';
 }
 
 
@@ -249,7 +250,7 @@ abstract mixin class _$CheckoutCopyWith<$Res> implements $CheckoutAttendanceEven
   factory _$CheckoutCopyWith(_Checkout value, $Res Function(_Checkout) _then) = __$CheckoutCopyWithImpl;
 @useResult
 $Res call({
- String latitude, String longitude
+ String latitude, String longitude, bool checkoutWithoutCheckin
 });
 
 
@@ -266,11 +267,12 @@ class __$CheckoutCopyWithImpl<$Res>
 
 /// Create a copy of CheckoutAttendanceEvent
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? latitude = null,Object? longitude = null,}) {
+@pragma('vm:prefer-inline') $Res call({Object? latitude = null,Object? longitude = null,Object? checkoutWithoutCheckin = null,}) {
   return _then(_Checkout(
 null == latitude ? _self.latitude : latitude // ignore: cast_nullable_to_non_nullable
 as String,null == longitude ? _self.longitude : longitude // ignore: cast_nullable_to_non_nullable
-as String,
+as String,null == checkoutWithoutCheckin ? _self.checkoutWithoutCheckin : checkoutWithoutCheckin // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 

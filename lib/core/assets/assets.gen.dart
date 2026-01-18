@@ -71,6 +71,10 @@ class $AssetsIconsGen {
   /// File path: assets/icons/reverse.svg
   SvgGenImage get reverse => const SvgGenImage('assets/icons/reverse.svg');
 
+  /// File path: assets/icons/setting_prisma.svg
+  SvgGenImage get settingPrisma =>
+      const SvgGenImage('assets/icons/setting_prisma.svg');
+
   /// List of all assets
   List<SvgGenImage> get values => [
     attendance,
@@ -83,6 +87,7 @@ class $AssetsIconsGen {
     notificationRounded,
     password,
     reverse,
+    settingPrisma,
   ];
 }
 

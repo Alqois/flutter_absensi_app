@@ -15,10 +15,13 @@ class CheckoutAttendanceBloc extends Bloc<CheckoutAttendanceEvent, CheckoutAtten
   ) : super(const _Initial()) {
     on<_Checkout>((event, emit) async {
       emit(const _Loading());
+
       final requestModel = CheckInOutRequestModel(
         latitude: event.latitude,
         longitude: event.longitude,
+        checkoutWithoutCheckin: event.checkoutWithoutCheckin, // ✅
       );
+
       final result = await datasource.checkout(requestModel);
       result.fold(
         (l) => emit(_Error(l)),

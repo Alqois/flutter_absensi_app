@@ -6,7 +6,7 @@ enum ButtonStyleType { filled, outlined }
 class Button extends StatelessWidget {
   const Button.filled({
     super.key,
-    required this.onPressed,
+    this.onPressed,
     required this.label,
     this.style = ButtonStyleType.filled,
     this.color = AppColors.primary,
@@ -22,7 +22,7 @@ class Button extends StatelessWidget {
 
   const Button.outlined({
     super.key,
-    required this.onPressed,
+    this.onPressed,
     required this.label,
     this.style = ButtonStyleType.outlined,
     this.color = Colors.transparent,
@@ -36,7 +36,9 @@ class Button extends StatelessWidget {
     this.fontSize = 18.0,
   });
 
-  final Function() onPressed;
+  /// 🔥 FIX UTAMA DI SINI
+  final VoidCallback? onPressed;
+
   final String label;
   final ButtonStyleType style;
   final Color color;
@@ -51,67 +53,63 @@ class Button extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final VoidCallback? effectiveOnPressed =
+        disabled ? null : onPressed;
+
     return SizedBox(
       height: height,
       width: width,
       child: style == ButtonStyleType.filled
           ? ElevatedButton(
-              onPressed: disabled ? null : onPressed,
+              onPressed: effectiveOnPressed,
               style: ElevatedButton.styleFrom(
-                backgroundColor: color,
+                backgroundColor:
+                    disabled ? AppColors.disabled : color,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(borderRadius),
                 ),
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  icon ?? const SizedBox.shrink(),
-                  if (icon != null && label.isNotEmpty)
-                    const SizedBox(width: 10.0),
-                  Text(
-                    label,
-                    style: TextStyle(
-                      color: textColor,
-                      fontSize: fontSize,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  if (suffixIcon != null && label.isNotEmpty)
-                    const SizedBox(width: 10.0),
-                  suffixIcon ?? const SizedBox.shrink(),
-                ],
-              ),
+              child: _buildContent(),
             )
           : OutlinedButton(
-              onPressed: disabled ? null : onPressed,
+              onPressed: effectiveOnPressed,
               style: OutlinedButton.styleFrom(
                 backgroundColor: color,
-                side: const BorderSide(color: Colors.grey),
+                side: BorderSide(
+                  color: disabled
+                      ? AppColors.stroke
+                      : AppColors.primary,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(borderRadius),
                 ),
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  icon ?? const SizedBox.shrink(),
-                  if (icon != null && label.isNotEmpty)
-                    const SizedBox(width: 10.0),
-                  Text(
-                    label,
-                    style: TextStyle(
-                      color: textColor,
-                      fontSize: fontSize,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  if (suffixIcon != null && label.isNotEmpty)
-                    const SizedBox(width: 10.0),
-                  suffixIcon ?? const SizedBox.shrink(),
-                ],
-              ),
+              child: _buildContent(),
             ),
+    );
+  }
+
+  Widget _buildContent() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        if (icon != null) icon!,
+        if (icon != null && label.isNotEmpty)
+          const SizedBox(width: 10),
+        Text(
+          label,
+          style: TextStyle(
+            color: disabled
+                ? AppColors.subtitle
+                : textColor,
+            fontSize: fontSize,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        if (suffixIcon != null && label.isNotEmpty)
+          const SizedBox(width: 10),
+        if (suffixIcon != null) suffixIcon!,
+      ],
     );
   }
 }
